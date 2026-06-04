@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KORA Shop</title>
+
+<link rel="stylesheet" href="css/styles.css">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+        KORA
+    </div>
+
+</nav>
+
+<section class="filters">
+
+    <button onclick="loadProducts()">
+        ALL
+    </button>
+
+    <button onclick="loadProducts('tees')">
+        TEES
+    </button>
+
+    <button onclick="loadProducts('outerwear')">
+        OUTERWEAR
+    </button>
+
+    <button onclick="loadProducts('pants')">
+        PANTS
+    </button>
+
+    <button onclick="loadProducts('hoodies')">
+        HOODIES
+    </button>
+
+    <button onclick="loadProducts('accessories')">
+        ACCESSORIES
+    </button>
+
+</section>
+
+<section class="products">
+
+    <div id="product-grid"></div>
+
+</section>
+
+<script src="js/shop.js"></script>
+
+</body>
+</html>

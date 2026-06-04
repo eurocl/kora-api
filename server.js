@@ -1,9 +1,15 @@
-```js id="h6p0q1"
 const http = require('http');
 
 const rateLimiter = require('./middleware/rateLimiter');
 const { connectRedis } = require('./services/redisClient');
 const { saveIncident } = require('./services/sqliteService');
+
+const {
+    getAllProducts,
+    getProductById,
+    getProductsByCategory
+} = require('./services/productService');
+
 const parseBody = require('./utils/bodyParser');
 const { sendJSON } = require('./utils/responses');
 
@@ -11,9 +17,22 @@ connectRedis();
 
 const server = http.createServer(async (req, res) => {
 
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+
+        res.writeHead(204);
+        return res.end();
+    }
+
     try {
 
-        const url = new URL(req.url, `http://${req.headers.host}`);
+        const url = new URL(
+            req.url,
+            `http://${req.headers.host}`
+        );
 
         // =================================
         // POST /api/data
@@ -23,13 +42,15 @@ const server = http.createServer(async (req, res) => {
             url.pathname === '/api/data'
         ) {
 
-            const allowed = await rateLimiter(req, res);
+            const allowed =
+                await rateLimiter(req, res);
 
             if (!allowed) return;
 
             try {
 
-                const data = await parseBody(req);
+                const data =
+                    await parseBody(req);
 
                 if (
                     !data.message ||
@@ -41,7 +62,8 @@ const server = http.createServer(async (req, res) => {
                     });
                 }
 
-                const ip = req.socket.remoteAddress;
+                const ip =
+                    req.socket.remoteAddress;
 
                 await saveIncident(ip, data);
 
@@ -56,6 +78,71 @@ const server = http.createServer(async (req, res) => {
                     error: 'JSON inválido'
                 });
             }
+        }
+
+        // =================================
+        // GET /productos
+        // GET /productos?category=tees
+        // =================================
+        if (
+            req.method === 'GET' &&
+            url.pathname === '/productos'
+        ) {
+
+            const category =
+                url.searchParams.get('category');
+
+            if (category) {
+
+                const products =
+                    await getProductsByCategory(
+                        category
+                    );
+
+                return sendJSON(
+                    res,
+                    200,
+                    products
+                );
+            }
+
+            const products =
+                await getAllProducts();
+
+            return sendJSON(
+                res,
+                200,
+                products
+            );
+        }
+
+        // =================================
+        // GET /productos/:id
+        // =================================
+        if (
+            req.method === 'GET' &&
+            url.pathname.startsWith('/productos/')
+        ) {
+
+            const id =
+                url.pathname.split('/')[2];
+
+            const product =
+                await getProductById(id);
+
+            if (!product) {
+
+                return sendJSON(res, 404, {
+                    error:
+                        'Producto no encontrado'
+                });
+            }
+
+            return sendJSON(
+                res,
+                200,
+                product
+            );
         }
 
         // =================================
@@ -88,7 +175,9 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-server.listen(3000, () => {
-    console.log('Servidor corriendo en puerto 3000');
+server.listen(3001, () => {
+
+    console.log(
+        'Servidor corriendo en puerto 3001'
+    );
 });
-```
